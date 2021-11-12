@@ -1,0 +1,877 @@
+<template>
+  <div class="app-container" :style="'background:repeat '+ditu+';background-size:cover;'">
+    <div style="margin-bottom: 1em; display: flex;justify-content: center;align-items: center">
+      <el-row type="flex" justify="center" class="filter-container" style="align-items:center;margin-top: 1em;">
+        <el-checkbox-group v-model="checkList" style="margin-right: 1em;">
+          <el-checkbox class="color1" label="0">主动协助</el-checkbox>
+          <el-checkbox class="color1" label="1">讲话</el-checkbox>
+          <el-checkbox class="color1" label="2">手势</el-checkbox>
+          <el-checkbox class="color1" label="3">异常音</el-checkbox>
+        </el-checkbox-group>
+        <el-button class="filter-item" type="danger" @click="cheat" :loading="cheatLoading" style="margin-left: 1em;">
+          疑似作弊
+        </el-button>
+        <el-button class="filter-item" type="success" @click="normal" :loading="normalLoading">
+          正常
+        </el-button>
+      </el-row>
+    </div>
+    <div id="main">
+      <div class="stage border" v-loading="loading" element-loading-text="视频正在生成，预计15秒，请稍后..." element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.8)">
+        <!--style="flex-shrink: 0;position: relative;width:640px;height:960px;"-->
+        <video id="video" ref='video' class="video" width="480px" height="720px" style="position: absolute;" preload="auto" controls="controls">
+          您的浏览器不支持 HTML5 video 标签。
+        </video>
+        <canvas id="canvasLine" width="480" height="620">您的浏览器不支持画布。</canvas>
+      </div>
+      <div class="info font1">
+        <div class="border" style="padding: 1em;">
+          <div class="row" style="margin-top: 0">
+            <!--<span style="text-align: justify;text-align-last: justify;" class="color3">身份证号：</span><span class= "color1">340222199305110015</span>-->
+            <span style="text-align: justify;text-align-last: justify;" class="color3">身份证号：</span><span class="color1">{{studentID}}</span>
+          </div>
+          <div class="row">
+            <!--<span class="color3">考试姓名：</span><span style="width:180px;" class="color1">周胜</span>-->
+            <span class="color3">考生姓名：</span><span style="width:180px;" class="color1">{{studentName}}</span>
+            <span class="color3">考试员号：</span><span class="color1">{{exammonitorName}}</span>
+          </div>
+          <div class="row">
+            <span class="color3">车&nbsp牌&nbsp号<span style="margin-left: 5px;">：</span></span><span style="width:180px;" class="color1">{{carNumber}}</span>
+            <span class="color3">考试车型：</span><span class="color1">{{carType}}</span>
+            <!--<span class="color3">考试车型：</span><span class="color1">C2</span>-->
+          </div>
+          <div class="row">
+            <span class="color3">开始时间：</span><span class="color1">{{startTime}}</span>
+          </div>
+          <div class="row">
+            <span class="color1">考试项目：{{examName}}</span>
+          </div>
+          <div class="row">
+            <span class="color1">考试得分：{{score}}</span>
+          </div>
+          <div class="row" style="margin-bottom: 0">
+            <span class="color2">扣分原因：</span><span class="color1">{{deduct}}</span>
+          </div>
+        </div>
+        <div style="display: flex;justify-content:space-between;">
+          <div style="display: flex;flex-flow: column;flex-basis:400px;">
+            <div class="back" style="">
+              <div class="row">
+                <span class="color3">车&nbsp速：</span><span style="width:100px;" class="color1 font2">{{animatedSpeed}}</span>
+                <span class="color3">档&nbsp位：</span><span class="color1 font2">{{gear}}</span>
+              </div>
+              <div class="row" style="margin-bottom: 0">
+                <span class="color3">发动机转速：</span><span class="color1 font2">{{rp}}</span>
+              </div>
+            </div>
+            <div class="back">
+              <p class="font1 color3" style="text-align: center;">驾驶室异常情况</p>
+              <div class="behavior">
+                <div class="border behavior4 item color3"><span>主动协助</span></div>
+                <div class="border behavior1 item color3"><span>手势</span></div>
+                <div class="border behavior3 item color3"><span>讲话</span></div>
+                <div class="border behavior2 item color3"><span>异常音</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="sign">
+            <img class="s1" :src="require('../../assets/image/old/lihe.png')" v-show="!lihe">
+            <img class="s2" :src="require('../../assets/image/old/jiaosha.png')" v-show="!jiaosha">
+            <img class="s3" :src="require('../../assets/image/old/fusha.png')" v-show="!fusha">
+            <img class="s4" :src="require('../../assets/image/old/zuozhuan.png')" v-show="!zuozhuan">
+            <img class="s5" :src="require('../../assets/image/old/youzhuan.png')" v-show="!youzhuan">
+            <img class="s6" :src="require('../../assets/image/old/shuangshan.png')" v-show="!shuangshan">
+            <img class="s7" :src="require('../../assets/image/old/jinguangdeng.png')" v-show="!jinguangdeng">
+            <img class="s8" :src="require('../../assets/image/old/yuanguangdeng.png')" v-show="!yuanguangdeng">
+            <img class="s9" :src="require('../../assets/image/old/shikuandeng.png')" v-show="!shikuandeng">
+            <img class="s10" :src="require('../../assets/image/old/anquandai.png')" v-show="anquandai">
+            <img class="s11" :src="require('../../assets/image/old/chemen.png')" v-show="!chemen">
+            <img class="s12" :src="require('../../assets/image/old/shousha.png')" v-show="!shousha">
+            <img class="s1" :src="require('../../assets/image/old/lihe_gl.png')" v-show="lihe">
+            <img class="s2" :src="require('../../assets/image/old/jiaosha_gl.png')" v-show="jiaosha">
+            <img class="s3" :src="require('../../assets/image/old/fusha_gl.png')" v-show="fusha">
+            <img class="s4" :src="require('../../assets/image/old/zuozhuan_gl.png')" v-show="zuozhuan">
+            <img class="s5" :src="require('../../assets/image/old/youzhuan_gl.png')" v-show="youzhuan">
+            <img class="s6" :src="require('../../assets/image/old/shuangshan_gl.png')" v-show="shuangshan">
+            <img class="s7" :src="require('../../assets/image/old/jinguangdeng_gl.png')" v-show="jinguangdeng">
+            <img class="s8" :src="require('../../assets/image/old/yuanguangdeng_gl.png')" v-show="yuanguangdeng">
+            <img class="s9" :src="require('../../assets/image/old/shikuandeng_gl.png')" v-show="shikuandeng">
+            <img class="s10" :src="require('../../assets/image/old/anquandai_gl.png')" v-show="!anquandai">
+            <img class="s11" :src="require('../../assets/image/old/chemen_gl.png')" v-show="chemen">
+            <img class="s12" :src="require('../../assets/image/old/shousha_gl.png')" v-show="shousha">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import { getSignalInfo, getExamInfoDetail, updateExamInfoDetail, getProjectAndMarkRule } from '@/api/cheat'
+export default {
+  name: "Video",
+  data() {
+    return {
+      examDesc: {},
+      cheatDesc: {},
+
+      ditu: 'url(' + require("../../assets/image/ditu.png") + ')',
+      lihe: 0,
+      jiaosha: 0,
+      fusha: 0,
+      zuozhuan: 0,
+      youzhuan: 0,
+      shuangshan: 0,
+      jinguangdeng: 0,
+      yuanguangdeng: 0,
+      shikuandeng: 0,
+      anquandai: 0,
+      chemen: 0,
+      shousha: 0,
+
+      //info
+      studentID: '',
+      studentName: '',
+      exammonitorName: '',
+      carType: '',
+      carNumber: '',
+      startTime: '',
+      examName: '',
+      score: '',
+      deduct: '',
+
+      speed: 0, //速度
+      tweenedSpeed: 0,
+      rp: 0, //转速
+      tweenedRp: 0,
+      gear: 0, //档位
+
+      //对象
+      video: {}, //video
+      ctLine: {}, //canvas
+      playTimer: '', //播放的定时器
+      ajaxTimer: '', //轮询定时器
+
+      timestamp: -1,
+      openLine: false,
+
+      guestureMap: {},
+      obdMap: {},
+      cheatMap: {},
+
+      url: '',
+
+      checkList: [],
+      loading: false,
+      cheatLoading: false,
+      normalLoading: false
+    }
+  },
+  computed: {
+    animatedSpeed: function() {
+      return this.tweenedSpeed.toFixed(0);
+    },
+    // animatedRp: function () {
+    //   return this.tweenedRp.toFixed(0);
+    // }
+  },
+  watch: {
+    speed: function(newValue) {
+      TweenLite.to(this.$data, 0.5, { tweenedSpeed: newValue });
+    },
+    // rp: function (newValue) {
+    //   TweenLite.to(this.$data, 1, {tweenedRp: newValue});
+    // }
+  },
+  created() {
+    console.log('创建页面')
+    // this.onKeyEvent()
+    // this.initFile()
+  },
+  beforeDestroy() {
+    console.log('预备销毁页面')
+    // this.destroyKeyEvent()
+    // clearInterval(this.ajaxTimer)
+    // this.endPlay()
+  },
+  destroyed() {
+    clearInterval(this.ajaxTimer);
+    this.endPlay()
+  },
+  mounted: function() {
+    this.loading = 1
+    this.ajaxTimer = setInterval(this.request, 1000)
+    this.getDesc();
+  },
+  methods: {
+    getDesc() {
+        getProjectAndMarkRule().then(response =>{
+            if(response.data.data.examProjects.length > 0){
+                var examPro = response.data.data.examProjects;
+                for(var i =0; i < examPro.length;i++){
+                    this.examDesc[examPro[i].djgProjectCode] = examPro[i].projectName;
+                }
+            }
+
+            if(response.data.data.markRules.length > 0){
+                var markRules = response.data.data.markRules;
+                for(var i =0; i < markRules.length;i++){
+                    this.cheatDesc[markRules[i].itemno + '.' + markRules[i].markserial] = markRules[i].markdepend;
+                }
+            }
+        })
+    },
+    request() {
+      console.log('发送请求')
+      getSignalInfo({ id: this.$route.query.id }).then(response => {
+        console.log(response)
+        if (response.code === -2) {
+          return
+        } else if (response.code === -1 || response.code === -3) {
+          this.loading = 0
+          clearInterval(this.ajaxTimer)
+          this.$message.error('加载失败');
+          return
+        }
+
+        this.loading = 0
+        clearInterval(this.ajaxTimer)
+
+        //如果是nano，开启画骨骼
+        if (response.data.deviceType === '2' || response.data.deviceType === '1') this.openLine = true;
+
+        this.url = response.data.fileStr
+        this.checkList = response.data.type?response.data.type.split(','):[];
+
+        let re = '';
+        try {
+            re = JSON.parse(response.data.signalInfo)
+            this.timestamp = Math.floor(re.startTime / 100);
+
+            let guestureMap = re.guestureMap
+            let obdMap = re.obdMap
+            let cheatMap = re.cheatMap
+
+            //处理姿态数据
+            if (guestureMap) {
+              let keyarr1 = Object.keys(guestureMap)
+              let l1 = keyarr1.length
+              for (let i = 0; i < l1; i++) {
+
+                this.guestureMap[Math.floor(keyarr1[i] / 100)] = guestureMap[keyarr1[i]];
+
+              }
+            }
+
+            if (obdMap) {
+              //处理obd数据
+              let keyarr2 = Object.keys(obdMap)
+              let l2 = keyarr2.length
+              for (let i = 0; i < l2; i++) {
+                this.obdMap[Math.floor(keyarr2[i] / 100)] = obdMap[keyarr2[i]]
+              }
+            }
+
+            if (cheatMap) {
+              //处理作弊数据
+              let keyarr3 = Object.keys(cheatMap)
+              let l3 = keyarr3.length
+              for (let i = 0; i < l3; i++) {
+                this.cheatMap[Math.floor(keyarr3[i] / 100)] = cheatMap[keyarr3[i]]
+              }
+            }
+        }catch(e){
+          console.log('signalInfo 字段不合法');
+        }
+
+        this.initDraw()
+        this.initVideo()
+      }).catch(function(err) {
+        console.log(err);
+      })
+    },
+
+    initVideo() {
+      this.video = document.getElementById('video');
+      this.video.onplay = this.startPlay
+      this.video.onpause = this.endPlay
+      this.video.onprogress = function(ev) {
+        // console.log(ev);
+      }
+      this.video.src = this.url
+      // console.log(video)
+      // this.video.src = "http://47.106.75.159:8080/html/tls.mp4"
+    },
+    // 初始化绘制信息
+    initDraw() { // 初始化画布
+      let canvasLine = document.getElementById('canvasLine')
+      this.ctLine = canvasLine.getContext('2d')
+    },
+    startPlay() {
+      this.playTimer = setInterval(this.refreshData, 100)
+    },
+    endPlay() {
+        console.log('this.playTimer end playTimer== ', this.playTimer);
+      clearInterval(this.playTimer)
+    },
+    drawLine(p) {
+      let ct = this.ctLine
+
+      //先整理数据 将p中的点坐标都取整
+      if (!p || p == null || p.length == 0) return;
+
+      for (let i = 0; i < p.length; i++) {
+
+        //坐标值是按照 640 * 480 计算， 页面按照480 * 360 计算， 需要等比换算坐标
+        p[i].x = Math.floor(p[i].x*0.75)
+        p[i].y = Math.floor(p[i].y*0.75)
+        p[i].score = Math.floor(p[i].score)
+      }
+      ct.clearRect(0, 0, 640, 480)
+      ct.lineWidth = 4 //线条的宽度
+
+      //draw the man
+      if (p[0].x && p[0].y && p[15].x && p[15].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#bb6564"
+        ct.moveTo(p[0].x, p[0].y)
+        ct.lineTo(p[15].x, p[15].y)
+        ct.stroke()
+      }
+
+      if (p[0].x && p[0].y && p[16].x && p[16].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#bb6564"
+        ct.moveTo(p[0].x, p[0].y)
+        ct.lineTo(p[16].x, p[16].y)
+        ct.stroke()
+      }
+
+      if (p[15].x && p[15].y && p[17].x && p[17].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#bb6564"
+        ct.moveTo(p[15].x, p[15].y)
+        ct.lineTo(p[17].x, p[17].y)
+        ct.stroke()
+      }
+
+      if (p[16].x && p[16].y && p[18].x && p[18].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#bb6564"
+        ct.moveTo(p[16].x, p[16].y)
+        ct.lineTo(p[18].x, p[18].y)
+        ct.stroke()
+      }
+
+       if (p[0].x && p[0].y && p[1].x && p[1].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#bb6564"
+        ct.moveTo(p[0].x, p[0].y)
+        ct.lineTo(p[1].x, p[1].y)
+        ct.stroke()
+      }
+
+       if (p[1].x && p[1].y && p[2].x && p[2].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f0b631";
+        ct.moveTo(p[1].x, p[1].y)
+        ct.lineTo(p[2].x, p[2].y)
+        ct.stroke()
+      }
+
+        if (p[2].x && p[2].y && p[3].x && p[3].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f0b631";
+        ct.moveTo(p[2].x, p[2].y)
+        ct.lineTo(p[3].x, p[3].y)
+        ct.stroke()
+      }
+      if (p[3].x && p[3].y && p[4].x && p[4].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f0b631";
+        ct.moveTo(p[3].x, p[3].y)
+        ct.lineTo(p[4].x, p[4].y)
+        ct.stroke()
+      }
+
+       if (p[1].x && p[1].y && p[5].x && p[5].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#e7dac9";
+        ct.moveTo(p[1].x, p[1].y)
+        ct.lineTo(p[5].x, p[5].y)
+        ct.stroke()
+      }
+      if (p[5].x && p[5].y && p[6].x && p[6].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#e7dac9";
+        ct.moveTo(p[5].x, p[5].y)
+        ct.lineTo(p[6].x, p[6].y)
+        ct.stroke()
+      }
+      if (p[6].x && p[6].y && p[7].x && p[7].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#e7dac9";
+        ct.moveTo(p[6].x, p[6].y)
+        ct.lineTo(p[7].x, p[7].y)
+        ct.stroke()
+      }
+
+      if (p[1].x && p[1].y && p[8].x && p[8].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#bb6564"
+        ct.moveTo(p[1].x, p[1].y)
+        ct.lineTo(p[8].x, p[8].y)
+        ct.stroke()
+      }
+
+      if (p[8].x && p[8].y && p[9].x && p[9].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#00ff00";
+        ct.moveTo(p[8].x, p[8].y)
+        ct.lineTo(p[9].x, p[9].y)
+        ct.stroke()
+      }
+      if (p[9].x && p[9].y && p[10].x && p[10].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f55066";
+        ct.moveTo(p[9].x, p[9].y)
+        ct.lineTo(p[10].x, p[10].y)
+        ct.stroke()
+      }
+      if (p[10].x && p[10].y && p[11].x && p[11].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f55066";
+        ct.moveTo(p[10].x, p[10].y)
+        ct.lineTo(p[11].x, p[11].y)
+        ct.stroke()
+      }
+      if (p[11].x && p[11].y && p[24].x && p[24].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f55066";
+        ct.moveTo(p[11].x, p[11].y)
+        ct.lineTo(p[24].x, p[24].y)
+        ct.stroke()
+      }
+      if (p[11].x && p[11].y && p[22].x && p[22].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f55066";
+        ct.moveTo(p[11].x, p[11].y)
+        ct.lineTo(p[22].x, p[22].y)
+        ct.stroke()
+      }
+      if (p[22].x && p[22].y && p[23].x && p[23].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#f55066";
+        ct.moveTo(p[22].x, p[22].y)
+        ct.lineTo(p[23].x, p[23].y)
+        ct.stroke()
+      }
+
+      if (p[8].x && p[8].y && p[12].x && p[12].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#0000ff";
+        ct.moveTo(p[8].x, p[8].y)
+        ct.lineTo(p[12].x, p[12].y)
+        ct.stroke()
+      }
+      if (p[12].x && p[12].y && p[13].x && p[13].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#0000ff";
+        ct.moveTo(p[12].x, p[12].y)
+        ct.lineTo(p[13].x, p[13].y)
+        ct.stroke()
+      }
+      if (p[13].x && p[13].y && p[14].x && p[14].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#0000ff";
+        ct.moveTo(p[13].x, p[13].y)
+        ct.lineTo(p[14].x, p[14].y)
+        ct.stroke()
+      }
+      if (p[14].x && p[14].y && p[21].x && p[21].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#0000ff";
+        ct.moveTo(p[14].x, p[14].y)
+        ct.lineTo(p[21].x, p[21].y)
+        ct.stroke()
+      }
+      if (p[14].x && p[14].y && p[19].x && p[19].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#0000ff";
+        ct.moveTo(p[14].x, p[14].y)
+        ct.lineTo(p[19].x, p[19].y)
+        ct.stroke()
+      }
+      if (p[19].x && p[19].y && p[20].x && p[20].y) {
+        ct.beginPath()
+        ct.strokeStyle = "#0000ff";
+        ct.moveTo(p[19].x, p[19].y)
+        ct.lineTo(p[20].x, p[20].y)
+        ct.stroke()
+      }
+    },
+    //监听键盘事件
+    onKeyEvent() {
+      var _this = this;
+      // document.onkeydown = function(e) {
+      //   let key = window.event.keyCode;
+      //   if(e.keyCode == 65){
+      //     console.log('你按下了A')
+      //     _this.animateCSS('.behavior4','flash')
+      //   }
+      //   if(e.keyCode == 83){
+      //     console.log('你按下了S')
+      //     _this.animateCSS('.behavior1','flash')
+      //   }
+      //   if(e.keyCode == 68){
+      //     console.log('你按下了D')
+      //     _this.animateCSS('.behavior3','flash')
+      //   }
+      //   if(e.keyCode == 70){
+      //     console.log('你按下了F')
+      //     _this.animateCSS('.behavior2','flash')
+      //   }
+      //   if(e.keyCode == 71){
+      //     console.log('你按下了G')
+      //     // _this.animateCSS('.behavior4','flash')
+      //     if(_this.fusha === 1) _this.fusha = 0
+      //     else _this.fusha = 1
+      //   }
+      // };
+    },
+    destroyKeyEvent() {
+      document.onkeydown = undefined
+    },
+    refreshData() { //刷新数据
+      let currentTime = Number(this.timestamp) + video.currentTime.toFixed(1) * 10;
+
+      let guestureMap = this.guestureMap[currentTime]
+      let obdMap = this.obdMap[currentTime]
+      let cheatMaps = [this.cheatMap[currentTime - 100], this.cheatMap[currentTime], this.cheatMap[currentTime + 100]];
+
+      // console.log(Number(this.timestamp) , currentTime.toFixed(1) * 10);
+      // console.log('guestureMap == ', guestureMap);
+      // console.log('obdMap == ', obdMap);
+      // console.log('obdMap == ', obdMap);
+      //开启骨骼
+      if (this.openLine) {
+        // console.log('刷新骨骼')
+        if (guestureMap) this.drawLine(JSON.parse(JSON.stringify(guestureMap.points)));
+      } else {
+        this.ctLine.clearRect(0, 0, 640, 480)
+      }
+
+      if (obdMap) {
+        // console.log('刷新数据')
+        let sign = obdMap.devicesInfo
+        if (sign) {
+          if (this.zuozhuan !== Number(sign.substr(0, 1))) this.zuozhuan = Number(sign.substr(0, 1))
+          if (this.youzhuan !== Number(sign.substr(1, 1))) this.youzhuan = Number(sign.substr(1, 1))
+          if (this.shuangshan !== Number(sign.substr(2, 1))) this.shuangshan = Number(sign.substr(2, 1))
+          if (this.yuanguangdeng !== Number(sign.substr(3, 1))) this.yuanguangdeng = Number(sign.substr(3, 1))
+          if (this.jinguangdeng !== Number(sign.substr(4, 1))) this.jinguangdeng = Number(sign.substr(4, 1))
+          if (this.shikuandeng !== Number(sign.substr(5, 1))) this.shikuandeng = Number(sign.substr(5, 1))
+          if (this.lihe !== Number(sign.substr(8, 1))) this.lihe = Number(sign.substr(8, 1))
+          if (this.jiaosha !== Number(sign.substr(9, 1))) this.jiaosha = Number(sign.substr(9, 1))
+          if (this.shousha !== Number(sign.substr(10, 1))) this.shousha = Number(sign.substr(10, 1))
+          if (this.fusha !== Number(sign.substr(11, 1))) this.fusha = Number(sign.substr(11, 1))
+          if (this.chemen !== Number(sign.substr(13, 1))) this.chemen = Number(sign.substr(13, 1))
+          if (this.anquandai !== Number(sign.substr(14, 1))) this.anquandai = Number(sign.substr(14, 1))
+          // if (this.gear !== Number(sign.substr(15, 1))) this.gear = parseInt(sign.substr(15, 3), 2)
+        }
+
+        this.carType = obdMap.examCarType
+        this.carNumber = obdMap.carNumber
+        this.studentName = obdMap.studentId
+        this.exammonitorName = obdMap.exammonitorName;
+        this.studentID = obdMap.studentExamInfo.idCard
+        this.startTime = obdMap.studentExamInfo.startTime
+
+        let last = obdMap.deductionIDs.split(';').filter(item => item).pop()
+        this.examName = this.examDesc[obdMap.projectId] ? this.examDesc[obdMap.projectId] : ''
+        this.deduct = this.cheatDesc[last] ? this.cheatDesc[last] : ''
+
+        this.speed = obdMap.carSpeed ? obdMap.carSpeed : 0
+        this.rp = obdMap.engineSpeed ? obdMap.engineSpeed : 0
+        this.gear = obdMap.devicesInfoBen.gear ? obdMap.devicesInfoBen.gear : 0
+
+        this.score = obdMap.deductionValue
+      }
+
+        // console.log('cheatMap.cheatType == ', cheatMaps);
+        for(var i=0;i<cheatMaps.length;i++){
+            if(cheatMaps[i]){
+                if (cheatMaps[i].cheatType === '2') this.animateCSS('.behavior1', 'flash')
+                if (cheatMaps[i].cheatType === '1') this.animateCSS('.behavior2', 'flash')
+                if (cheatMaps[i].cheatType === '1') this.animateCSS('.behavior3', 'flash')
+                if (cheatMaps[i].cheatType === '0') this.animateCSS('.behavior4', 'flash')
+            }
+        }
+    },
+    clearData() {
+      this.zuozhuan = 0
+      this.youzhuan = 0
+      this.shuangshan = 0
+      this.yuanguangdeng = 0
+      this.jinguangdeng = 0
+      this.shikuandeng = 0
+      this.lihe = 0
+      this.jiaosha = 0
+      this.shousha = 0
+      this.fusha = 0
+      this.chemen = 0
+      this.anquandai = 0
+      this.gear = 0
+
+      this.carType = ''
+      this.carNumber = ''
+      this.studentName = ''
+      this.studentID = ''
+      this.startTime = ''
+      this.examName = ''
+      this.deduct = ''
+
+      this.speed = 0
+      this.rp = 0
+    },
+    animateCSS(element, animationName, callback) {
+      const node = document.querySelector(element)
+      node.classList.add('animated')
+      node.classList.add(animationName)
+
+      function handleAnimationEnd() {
+        node.classList.remove('animated')
+        node.classList.remove(animationName)
+        node.removeEventListener('animationend', handleAnimationEnd)
+        if (typeof callback === 'function') callback()
+      }
+      node.addEventListener('animationend', handleAnimationEnd)
+    },
+    cheat() {
+        this.cheatLoading = true
+          updateExamInfoDetail({ id: this.$route.query.id, type: this.checkList.join(','), handleFlag: 1 }).then(response => {
+            this.cheatLoading = false
+            this.$message({
+              message: '操作成功',
+              type: 'success'
+            })
+            console.log('$emit("changeSuccess")');
+            this.$EventBus.$emit("changeSuccess");
+          })
+        },
+        normal() {
+          this.normalLoading = true
+          updateExamInfoDetail({ id: this.$route.query.id, handleFlag: 2 }).then(response => {
+            this.normalLoading = false
+            this.$message({
+              message: '操作成功',
+              type: 'success'
+            })
+            console.log('$emit("changeSuccess")');
+            this.$EventBus.$emit("changeSuccess");
+          })
+        }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+/*设置字体*/
+p,
+span {
+  font-size: 18px;
+  font-family: "PingFang SC", "微软雅黑", Arial, sans-serif;
+  /*letter-spacing: 5px;*/
+  /*line-height: 36px;*/
+}
+
+.font1 {
+  font-size: 24px;
+}
+
+.font2 {
+  font-size: 18px;
+}
+
+.color1 {
+  color: #fff;
+}
+
+.color2 {
+  color: rgb(243, 152, 0);
+}
+
+.color3 {
+  color: rgb(147, 164, 194);
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  min-height: 100vh;
+}
+
+.border {
+  border: 2px solid rgb(76, 103, 145);
+  border-radius: 5px;
+}
+
+.border-red {
+  border: 2px solid red;
+  border-radius: 5px;
+}
+
+.back {
+  background-color: #233962;
+  padding: .5em;
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+#main {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.stage {
+  width: 484px;
+  height: 724px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+canvas {
+  position: absolute;
+}
+
+#canvasLine {
+  z-index: 2
+}
+
+.video {
+  z-index: 1
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-basis: 700px;
+  flex-shrink: 0;
+  margin-left: 2em;
+}
+
+//九宫格
+$sw:110px;
+$sh:100px;
+
+.sign {
+  position: relative;
+  flex-shrink: 0;
+  width: $sw*3;
+  height: $sh*4;
+}
+
+.sign img {
+  width: $sw;
+  height: $sh;
+  position: absolute;
+}
+
+.s1 {
+  top: 0;
+  left: 0;
+}
+
+.s2 {
+  top: 0;
+  left: $sw*1;
+}
+
+.s3 {
+  top: 0;
+  left: $sw*2;
+}
+
+.s4 {
+  top: $sh;
+  left: 0;
+}
+
+.s5 {
+  top: $sh;
+  left: $sw*1;
+}
+
+.s6 {
+  top: $sh;
+  left: $sw*2;
+}
+
+.s7 {
+  top: $sh*2;
+  left: 0;
+}
+
+.s8 {
+  top: $sh*2;
+  left: $sw*1;
+}
+
+.s9 {
+  top: $sh*2;
+  left: $sw*2;
+}
+
+.s10 {
+  top: $sh*3;
+  left: 0;
+}
+
+.s11 {
+  top: $sh*3;
+  left: $sw*1;
+}
+
+.s12 {
+  top: $sh*3;
+  left: $sw*2;
+}
+
+.behavior {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.behavior .item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 110px;
+  height: 60px;
+  margin: 15px;
+}
+
+.flash {
+  background-color: #70b32d;
+  border: 2px solid #70b32d;
+  border-radius: 5px;
+  color: #fff;
+
+  animation-duration: 2s;
+  animation-iteration-count: 2;
+}
+
+.el-switch__label * {
+  color: #fff;
+}
+
+</style>
